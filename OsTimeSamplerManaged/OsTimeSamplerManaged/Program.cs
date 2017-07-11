@@ -110,9 +110,9 @@ namespace OsTimeSamplerManaged
 
             // Round to nearest 10 mhz
             frequency = Math.Round(frequency / 1e7) * 1e7;
-            
+
             // Sanity check for dubious CPU frequency
-            if(frequency > 6e9 || frequency < 8e7)
+            if (frequency > 6e9 || frequency < 8e7)
             {
                 Console.Error.WriteLine("WARNING: Unusual CPU frequency, {0} GHz", frequency / 1e9);
             }
@@ -120,20 +120,41 @@ namespace OsTimeSamplerManaged
             return frequency;
         }
 
+        // Array of different measurements we can make
+        private static readonly Func<double>[] funcs =  {
+                                                            MeasureRdtsc,
+                                                            MeasureQueryPerformanceCounter,
+                                                            MeasureGetSystemTimePreciseAsFileTime,
+                                                            MeasureDateTimeNow,
+                                                            MeasureDateTimeUtcNow
+                                                        };
+
+        private static readonly string[] funcNames =    {
+                                                           "rdtsc",
+                                                           "QueryPerformanceCounter via P/Invoke",
+                                                           "GetSystemTimePreciseAsFileTime via P/Invoke",
+                                                           "DateTime.Now",
+                                                           "DateTime.UtcNow"
+                                                        };
+
         static void Main(string[] args)
         {
+
+            
             if (args.Length != 3)
             {
                 Console.WriteLine("Usage: {0} method interval count\n", System.AppDomain.CurrentDomain.FriendlyName);
 
                 Console.WriteLine("Reports measured latency, in seconds, of retrieving the time given the specified method.\nSampled 'count' times, with 'interval' ms delay between samples.\n");
-                
+
                 Console.WriteLine("\nMeasurement methods:");
-                Console.WriteLine("\t1 - rdtsc");
-                Console.WriteLine("\t2 - QueryPerformanceCounter via P/Invoke");
-                Console.WriteLine("\t3 - GetSystemTimePreciseAsFileTime via P/Invoke");
-                Console.WriteLine("\t4 - DateTime.Now");
-                Console.WriteLine("\t5 - DateTime.UtcNow");
+
+                for (int i = 0; i < funcNames.Length; i++)
+                {
+                    Console.WriteLine("\t{0} - {1}", i, funcNames[i]);
+                }
+
+                Console.WriteLine();
 
                 return;
             }
@@ -153,14 +174,7 @@ namespace OsTimeSamplerManaged
                 return;
             }
 
-            // Array of different measurements we can make
-            Func<double>[] funcs =  {
-                                        MeasureRdtsc,
-                                        MeasureQueryPerformanceCounter,
-                                        MeasureGetSystemTimePreciseAsFileTime,
-                                        MeasureDateTimeNow,
-                                        MeasureDateTimeUtcNow
-                                    };
+
 
             TSC_Frequency = GetTscFrequency();
 
