@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -88,14 +89,35 @@ namespace OsTimeSamplerManaged
 
         private static double GetTscFrequency()
         {
-            long qpcFrequency;
+            // To determine the TSC frequency, we take two samples that are
+            // about 1 second apart, and measure the actual elapsed time with
+            // the Stopwatch.  A little bit of division, and we've calculated
+            // the TSC frequency.
 
-            if (NativeMethods.QueryPerformanceFrequency(out qpcFrequency) == false)
+            Stopwatch sw = new Stopwatch();
+            // Start the sw and take the first TSC sample
+            sw.Start();
+            ulong rdtsc1 = NativeMethods.RdTsc();
+
+            Thread.Sleep(1000);
+
+            // Stop the sw and take the second TSC sample
+            sw.Stop();
+            ulong rdtsc2 = NativeMethods.RdTsc();
+
+            // Compute frequency
+            double frequency = (rdtsc2 - rdtsc1) / sw.Elapsed.TotalSeconds;
+
+            // Round to nearest 10 mhz
+            frequency = Math.Round(frequency / 1e7) * 1e7;
+            
+            // Sanity check for dubious CPU frequency
+            if(frequency > 6e9 || frequency < 8e7)
             {
-                return 0;
+                Console.Error.WriteLine("WARNING: Unusual CPU frequency, {0} GHz", frequency / 1e9);
             }
 
-            return qpcFrequency << 10;
+            return frequency;
         }
 
         static void Main(string[] args)
