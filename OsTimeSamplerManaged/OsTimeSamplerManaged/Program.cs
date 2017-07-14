@@ -57,6 +57,23 @@ namespace OsTimeSamplerManaged
             return delta / TSC_Frequency;
         }
 
+        private static double MeasureGetSystemTimeAsFileTime()
+        {
+            System.Runtime.InteropServices.ComTypes.FILETIME ft;
+
+            // make two back to back rdtsc calls, with a GSTAFT call in the middle
+            ulong rdtsc1 = NativeMethods.RdTsc();
+
+            NativeMethods.GetSystemTimeAsFileTime(out ft);
+
+            ulong rdtsc2 = NativeMethods.RdTsc();
+
+
+            ulong delta = rdtsc2 - rdtsc1;
+
+            return delta / TSC_Frequency;
+        }
+
         private static double MeasureDateTimeNow()
         {
             // make two back to back rdtsc calls, with a DateTime.Now call in the middle
@@ -125,6 +142,7 @@ namespace OsTimeSamplerManaged
                                                             MeasureRdtsc,
                                                             MeasureQueryPerformanceCounter,
                                                             MeasureGetSystemTimePreciseAsFileTime,
+                                                            MeasureGetSystemTimeAsFileTime,
                                                             MeasureDateTimeNow,
                                                             MeasureDateTimeUtcNow
                                                         };
@@ -133,14 +151,13 @@ namespace OsTimeSamplerManaged
                                                            "rdtsc",
                                                            "QueryPerformanceCounter via P/Invoke",
                                                            "GetSystemTimePreciseAsFileTime via P/Invoke",
+                                                           "GetSystemTimeAsFileTime via P/Invoke",
                                                            "DateTime.Now",
                                                            "DateTime.UtcNow"
                                                         };
 
         static void Main(string[] args)
         {
-
-            
             if (args.Length != 3)
             {
                 Console.WriteLine("Usage: {0} method interval count\n", System.AppDomain.CurrentDomain.FriendlyName);
@@ -174,8 +191,7 @@ namespace OsTimeSamplerManaged
                 return;
             }
 
-
-
+            // Get the TSC frequency, for interval measurement
             TSC_Frequency = GetTscFrequency();
 
             for (int i = 0; i < count; i++)
@@ -186,8 +202,6 @@ namespace OsTimeSamplerManaged
 
                 Console.WriteLine(measurement);
             }
-
-            Console.WriteLine(MeasureQueryPerformanceCounter());
         }
     }
 }

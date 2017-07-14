@@ -25,5 +25,8 @@ namespace OsTimeSamplerManaged
 
         [DllImport("kernel32.dll")]
         public static extern void GetSystemTimePreciseAsFileTime(out FILETIME lpSystemTimeAsFileTime);
+
+        [DllImport("kernel32.dll")]
+        public static extern void GetSystemTimeAsFileTime(out FILETIME lpSystemTimeAsFileTime);
     }
 }
