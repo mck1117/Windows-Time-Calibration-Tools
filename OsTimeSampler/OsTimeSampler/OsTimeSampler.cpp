@@ -32,6 +32,10 @@ int main(int argc, char ** argv)
 
     if (argc != 4) {
         printf("Usage: %s method interval count\n", argv[0]);
+		printf("\nMeasurement methods:\n");
+		printf("\t0 - GetSystemTimeAsFileTime\n");
+		printf("\t1 - GetSystemTimePreciseAsFileTime\n");
+		printf("\t2 - QueryPerformanceCounter\n\n");
         return -1;
     }
 
